@@ -1,0 +1,289 @@
+# Usage Guide
+
+## Quick Start
+
+### 1. Build the Docker Image
+
+```bash
+docker build -t drone-ai-review:latest .
+```
+
+### 2. Add to Your Drone Pipeline
+
+Add the following step to your `.drone.yml`:
+
+```yaml
+steps:
+  - name: generate-review-prompt
+    image: drone-ai-review:latest
+    settings:
+      comment_count: 15
+```
+
+### 3. Run Your Pipeline
+
+The plugin will generate `../output/task.txt` with the AI review prompt.
+
+## Configuration Examples
+
+### Example 1: Only Bug Detection
+
+```yaml
+steps:
+  - name: review
+    image: drone-ai-review:latest
+    settings:
+      enable_bugs: true
+      enable_performance: false
+      enable_scalability: false
+      enable_code_smell: false
+      comment_count: 20
+```
+
+### Example 2: Performance and Scalability Focus
+
+```yaml
+steps:
+  - name: review
+    image: drone-ai-review:latest
+    settings:
+      enable_bugs: false
+      enable_performance: true
+      enable_scalability: true
+      enable_code_smell: false
+      comment_count: 10
+```
+
+### Example 3: Custom Output Directory
+
+```yaml
+steps:
+  - name: review
+    image: drone-ai-review:latest
+    settings:
+      output_dir: /drone/src/custom-output
+      custom_rules_path: .config/review-rules.md
+```
+
+### Example 4: All Features Enabled
+
+```yaml
+steps:
+  - name: review
+    image: drone-ai-review:latest
+    settings:
+      enable_bugs: true
+      enable_performance: true
+      enable_scalability: true
+      enable_code_smell: true
+      comment_count: 25
+      output_dir: /drone/src/review-output
+      custom_rules_path: .harness/rules/review.md
+```
+
+## Full Pipeline Example
+
+Here's a complete Drone pipeline that generates the prompt and displays it:
+
+```yaml
+kind: pipeline
+type: docker
+name: ai-code-review
+
+steps:
+  # Clone with full history for proper diff
+  - name: clone
+    image: alpine/git
+    commands:
+      - git fetch origin $DRONE_TARGET_BRANCH
+      - git checkout $DRONE_COMMIT_SHA
+
+  # Generate AI review prompt
+  - name: generate-prompt
+    image: drone-ai-review:latest
+    settings:
+      enable_bugs: true
+      enable_performance: true
+      enable_scalability: true
+      enable_code_smell: true
+      comment_count: 15
+
+  # Display the generated prompt
+  - name: show-prompt
+    image: alpine:latest
+    commands:
+      - echo "Generated Prompt:"
+      - cat ../output/task.txt
+
+  # Optional: Send to AI service
+  # - name: ai-review
+  #   image: your-ai-service:latest
+  #   settings:
+  #     prompt_file: ../output/task.txt
+
+trigger:
+  event:
+    - pull_request
+```
+
+## Environment Variables
+
+If you prefer to use environment variables directly instead of settings:
+
+```yaml
+steps:
+  - name: review
+    image: drone-ai-review:latest
+    environment:
+      PLUGIN_ENABLE_BUGS: true
+      PLUGIN_ENABLE_PERFORMANCE: true
+      PLUGIN_ENABLE_SCALABILITY: true
+      PLUGIN_ENABLE_CODE_SMELL: true
+      PLUGIN_COMMENT_COUNT: 15
+      PLUGIN_OUTPUT_DIR: ../output
+```
+
+## Testing Locally
+
+### Using the Test Script
+
+```bash
+# Build the plugin
+go build -o drone-ai-review .
+
+# Run the test script
+./test-plugin.sh
+```
+
+### Manual Testing
+
+```bash
+export PLUGIN_REPO_NAME="my-repo"
+export PLUGIN_SOURCE_BRANCH="feature-branch"
+export PLUGIN_TARGET_BRANCH="main"
+export PLUGIN_MERGE_BASE_SHA="<merge-base-sha>"
+export PLUGIN_SOURCE_SHA="<source-sha>"
+export PLUGIN_COMMENT_COUNT=10
+export PLUGIN_OUTPUT_DIR="./output"
+
+./drone-ai-review
+```
+
+## Integration with AI Services
+
+### OpenAI GPT
+
+```yaml
+steps:
+  - name: generate-prompt
+    image: drone-ai-review:latest
+    settings:
+      comment_count: 15
+
+  - name: ai-review
+    image: openai/cli:latest
+    environment:
+      OPENAI_API_KEY:
+        from_secret: openai_key
+    commands:
+      - cat ../output/task.txt | openai api chat.completions.create -m gpt-4 > ../output/review.json
+```
+
+### Anthropic Claude
+
+```yaml
+steps:
+  - name: generate-prompt
+    image: drone-ai-review:latest
+    settings:
+      comment_count: 15
+
+  - name: ai-review
+    image: anthropic/claude-cli:latest
+    environment:
+      ANTHROPIC_API_KEY:
+        from_secret: anthropic_key
+    commands:
+      - cat ../output/task.txt | claude > ../output/review.json
+```
+
+## Custom Rules File
+
+Create a `.harness/rules/review.md` file in your repository:
+
+```markdown
+# Custom Review Rules
+
+## Security
+- All SQL queries must use parameterized statements
+- No hardcoded credentials or API keys
+- All user inputs must be sanitized
+
+## Performance
+- Avoid N+1 query problems
+- Use database indexes for frequently queried fields
+- Cache expensive computations
+
+## Code Quality
+- Functions should be no longer than 50 lines
+- Maximum cyclomatic complexity of 10
+- Meaningful variable names (no single letters except loop counters)
+```
+
+The plugin will automatically include these rules in the generated prompt.
+
+## Output Files
+
+### task.txt
+Generated by the plugin, contains the prompt for the AI model.
+
+Location: `../output/task.txt` (or your configured output directory)
+
+### review.json
+Created by the AI model after processing the prompt.
+
+Location: `../output/review.json`
+
+Example structure:
+```json
+{
+  "reviews": [
+    {
+      "file_path": "src/main.go",
+      "line_number_start": 42,
+      "line_number_end": 45,
+      "type": "bug",
+      "review": "Potential nil pointer dereference. Add nil check before accessing pointer."
+    }
+  ]
+}
+```
+
+## Troubleshooting
+
+### Issue: No task.txt generated
+**Solution**: Check output directory permissions and plugin logs.
+
+### Issue: Empty diff in prompt
+**Solution**: Ensure SHAs are correct and git history is available.
+
+### Issue: Plugin crashes
+**Solution**: Verify all required environment variables are set.
+
+### Issue: Custom rules not included
+**Solution**: Check that the rules file exists at the specified path.
+
+## Best Practices
+
+1. **Enable relevant review types**: Only enable the review types you care about
+2. **Set appropriate comment limits**: Balance thoroughness with noise
+3. **Use custom rules**: Tailor reviews to your project's specific needs
+4. **Version your plugin image**: Use tagged versions instead of `latest` in production
+5. **Review the output**: Always validate AI-generated reviews before acting on them
+
+## Support
+
+For issues or questions:
+- GitHub Issues: https://github.com/abhinav-harness/ai-review-prompt-plugin/issues
+- Documentation: See README.md
+

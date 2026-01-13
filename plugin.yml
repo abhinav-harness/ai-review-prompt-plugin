@@ -1,0 +1,83 @@
+name: drone-ai-review
+author: Drone Plugins
+description: Generates AI-powered code review prompts from pull request diffs
+tags:
+  - code-review
+  - ai
+  - pull-request
+  - git-diff
+icon: https://raw.githubusercontent.com/drone/brand/master/logos/png/drone-logo-dark_256.png
+
+settings:
+  repo_name:
+    type: string
+    description: Repository name (auto-detected from Drone environment)
+    default_from_env: DRONE_REPO_NAME
+    required: false
+
+  source_branch:
+    type: string
+    description: Source branch for the pull request
+    default_from_env: DRONE_SOURCE_BRANCH
+    required: false
+
+  target_branch:
+    type: string
+    description: Target branch for the pull request
+    default_from_env: DRONE_TARGET_BRANCH
+    required: false
+
+  merge_base_sha:
+    type: string
+    description: Merge base SHA for diff comparison
+    default_from_env: DRONE_COMMIT_BEFORE
+    required: false
+
+  source_sha:
+    type: string
+    description: Source SHA for diff comparison
+    default_from_env: DRONE_COMMIT_SHA
+    required: false
+
+  enable_bugs:
+    type: boolean
+    description: Enable bug detection in code reviews
+    default: true
+    required: false
+
+  enable_performance:
+    type: boolean
+    description: Enable performance issue detection
+    default: true
+    required: false
+
+  enable_scalability:
+    type: boolean
+    description: Enable scalability issue detection
+    default: true
+    required: false
+
+  enable_code_smell:
+    type: boolean
+    description: Enable code smell detection
+    default: true
+    required: false
+
+  comment_count:
+    type: number
+    description: Maximum number of comments per PR
+    default: 10
+    required: false
+
+  output_dir:
+    type: string
+    description: Output directory for generated prompt file
+    default: ../output
+    required: false
+
+  custom_rules_path:
+    type: string
+    description: Path to custom review rules file
+    default: .harness/rules/review.md
+    required: false
+

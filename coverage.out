@@ -1,0 +1,24 @@
+mode: set
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:30.29,47.2 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:50.46,52.17 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:52.17,54.3 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:55.2,55.14 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:59.53,61.17 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:61.17,63.3 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:64.2,65.16 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:65.16,67.3 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:68.2,68.18 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:72.50,74.17 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:74.17,76.3 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:77.2,78.16 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:78.16,80.3 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/settings.go:81.2,81.17 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:11.47,13.62 1 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:13.62,15.3 1 0
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:18.2,19.16 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:19.16,21.3 1 0
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:24.2,26.16 3 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:26.16,28.3 1 0
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:29.2,32.53 2 1
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:32.53,34.3 1 0
+github.com/abhinav-harness/ai-review-prompt-plugin/plugin/writer.go:36.2,37.12 2 1

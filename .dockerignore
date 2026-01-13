@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# CI/CD
+.drone.yml
+plugin.yml
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Output
+output/
+../output/
+
+# OS
+.DS_Store
+Thumbs.db
+
