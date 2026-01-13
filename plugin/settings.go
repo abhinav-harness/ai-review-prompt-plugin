@@ -21,9 +21,10 @@ type Settings struct {
 	EnableCodeSmell   bool
 
 	// Review configuration
-	CommentCount    int
-	OutputDir       string
-	CustomRulesPath string
+	CommentCount     int
+	OutputFile       string
+	ReviewOutputFile string
+	CustomRulesPath  string
 }
 
 // NewSettings creates a new Settings instance from environment variables
@@ -40,9 +41,10 @@ func NewSettings() Settings {
 		EnableScalability: getBoolEnv("PLUGIN_ENABLE_SCALABILITY", true),
 		EnableCodeSmell:   getBoolEnv("PLUGIN_ENABLE_CODE_SMELL", true),
 
-		CommentCount:    getIntEnv("PLUGIN_COMMENT_COUNT", 10),
-		OutputDir:       getEnv("PLUGIN_OUTPUT_DIR", "../output"),
-		CustomRulesPath: getEnv("PLUGIN_CUSTOM_RULES_PATH", ".harness/rules/review.md"),
+		CommentCount:     getIntEnv("PLUGIN_COMMENT_COUNT", 10),
+		OutputFile:       getEnv("PLUGIN_OUTPUT_FILE", "../output/task.txt"),
+		ReviewOutputFile: getEnv("PLUGIN_REVIEW_OUTPUT_FILE", "../output/review.json"),
+		CustomRulesPath:  getEnv("PLUGIN_CUSTOM_RULES_PATH", ".harness/rules/review.md"),
 	}
 }
 
@@ -80,3 +82,4 @@ func getIntEnv(key string, defaultValue int) int {
 	}
 	return intValue
 }
+

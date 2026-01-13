@@ -15,18 +15,19 @@ func TestPromptTemplate(t *testing.T) {
 
 	// Test with sample settings
 	settings := Settings{
-		RepoName:          "test-repo",
-		SourceBranch:      "feature-branch",
-		TargetBranch:      "main",
-		MergeBaseSha:      "abc123",
-		SourceSha:         "def456",
-		EnableBugs:        true,
+		RepoName:         "test-repo",
+		SourceBranch:     "feature-branch",
+		TargetBranch:     "main",
+		MergeBaseSha:     "abc123",
+		SourceSha:        "def456",
+		EnableBugs:       true,
 		EnablePerformance: true,
 		EnableScalability: true,
-		EnableCodeSmell:   true,
-		CommentCount:      10,
-		OutputDir:         "../output",
-		CustomRulesPath:   ".harness/rules/review.md",
+		EnableCodeSmell:  true,
+		CommentCount:     10,
+		OutputFile:       "../output/task.txt",
+		ReviewOutputFile: "../output/review.json",
+		CustomRulesPath:  ".harness/rules/review.md",
 	}
 
 	var result strings.Builder
@@ -44,7 +45,7 @@ func TestPromptTemplate(t *testing.T) {
 		"git diff",
 		"JSON response format",
 		"code suggestion markdown",
-		"../output/review.json", // Should contain the output directory path
+		"../output/review.json",
 		".harness/rules/review.md",
 	}
 
@@ -65,15 +66,17 @@ func TestPromptTemplateConditionals(t *testing.T) {
 		{
 			name: "all review types enabled",
 			settings: Settings{
-				RepoName:          "test-repo",
-				MergeBaseSha:      "abc",
-				SourceSha:         "def",
-				EnableBugs:        true,
+				RepoName:         "test-repo",
+				MergeBaseSha:     "abc",
+				SourceSha:        "def",
+				EnableBugs:       true,
 				EnablePerformance: true,
 				EnableScalability: true,
-				EnableCodeSmell:   true,
-				CommentCount:      10,
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  true,
+				CommentCount:     10,
+				OutputFile:       "../output/task.txt",
+				ReviewOutputFile: "../output/review.json",
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			shouldContain: []string{
 				"Look for critical bugs",
@@ -86,15 +89,17 @@ func TestPromptTemplateConditionals(t *testing.T) {
 		{
 			name: "only bugs enabled",
 			settings: Settings{
-				RepoName:          "test-repo",
-				MergeBaseSha:      "abc",
-				SourceSha:         "def",
-				EnableBugs:        true,
+				RepoName:         "test-repo",
+				MergeBaseSha:     "abc",
+				SourceSha:        "def",
+				EnableBugs:       true,
 				EnablePerformance: false,
 				EnableScalability: false,
-				EnableCodeSmell:   false,
-				CommentCount:      10,
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  false,
+				CommentCount:     10,
+				OutputFile:       "../output/task.txt",
+				ReviewOutputFile: "../output/review.json",
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			shouldContain: []string{
 				"Look for critical bugs",
@@ -108,15 +113,17 @@ func TestPromptTemplateConditionals(t *testing.T) {
 		{
 			name: "performance and scalability only",
 			settings: Settings{
-				RepoName:          "test-repo",
-				MergeBaseSha:      "abc",
-				SourceSha:         "def",
-				EnableBugs:        false,
+				RepoName:         "test-repo",
+				MergeBaseSha:     "abc",
+				SourceSha:        "def",
+				EnableBugs:       false,
 				EnablePerformance: true,
 				EnableScalability: true,
-				EnableCodeSmell:   false,
-				CommentCount:      15,
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  false,
+				CommentCount:     15,
+				OutputFile:       "../output/task.txt",
+				ReviewOutputFile: "../output/review.json",
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			shouldContain: []string{
 				"Look for performance issues",
@@ -130,15 +137,17 @@ func TestPromptTemplateConditionals(t *testing.T) {
 		{
 			name: "none enabled",
 			settings: Settings{
-				RepoName:          "test-repo",
-				MergeBaseSha:      "abc",
-				SourceSha:         "def",
-				EnableBugs:        false,
+				RepoName:         "test-repo",
+				MergeBaseSha:     "abc",
+				SourceSha:        "def",
+				EnableBugs:       false,
 				EnablePerformance: false,
 				EnableScalability: false,
-				EnableCodeSmell:   false,
-				CommentCount:      5,
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  false,
+				CommentCount:     5,
+				OutputFile:       "../output/task.txt",
+				ReviewOutputFile: "../output/review.json",
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			shouldContain: []string{
 				"test-repo",
@@ -149,6 +158,26 @@ func TestPromptTemplateConditionals(t *testing.T) {
 				"Look for scalability issues",
 				"Look for code smells",
 			},
+		},
+		{
+			name: "custom review output file",
+			settings: Settings{
+				RepoName:         "test-repo",
+				MergeBaseSha:     "abc",
+				SourceSha:        "def",
+				EnableBugs:       true,
+				EnablePerformance: true,
+				EnableScalability: true,
+				EnableCodeSmell:  true,
+				CommentCount:     10,
+				OutputFile:       "../output/task.txt",
+				ReviewOutputFile: "/custom/ai-reviews/output.json",
+				CustomRulesPath:  ".harness/rules/review.md",
+			},
+			shouldContain: []string{
+				"/custom/ai-reviews/output.json",
+			},
+			shouldNotContain: []string{},
 		},
 	}
 

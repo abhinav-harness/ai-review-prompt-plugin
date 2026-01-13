@@ -12,27 +12,28 @@ func TestWritePromptFile(t *testing.T) {
 		name        string
 		settings    Settings
 		wantError   bool
-		checkOutput func(t *testing.T, outputDir string)
+		checkOutput func(t *testing.T, outputFile string)
 	}{
 		{
 			name: "basic prompt generation",
 			settings: Settings{
-				RepoName:          "test-repo",
-				SourceBranch:      "feature",
-				TargetBranch:      "main",
-				MergeBaseSha:      "abc123",
-				SourceSha:         "def456",
-				EnableBugs:        true,
+				RepoName:         "test-repo",
+				SourceBranch:     "feature",
+				TargetBranch:     "main",
+				MergeBaseSha:     "abc123",
+				SourceSha:        "def456",
+				EnableBugs:       true,
 				EnablePerformance: true,
 				EnableScalability: true,
-				EnableCodeSmell:   true,
-				CommentCount:      10,
-				OutputDir:         filepath.Join(os.TempDir(), "test-output-1"),
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  true,
+				CommentCount:     10,
+				OutputFile:       filepath.Join(os.TempDir(), "test-output-1", "task.txt"),
+				ReviewOutputFile: filepath.Join(os.TempDir(), "test-output-1", "review.json"),
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			wantError: false,
-			checkOutput: func(t *testing.T, outputDir string) {
-				content, err := os.ReadFile(filepath.Join(outputDir, "task.txt"))
+			checkOutput: func(t *testing.T, outputFile string) {
+				content, err := os.ReadFile(outputFile)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
@@ -61,32 +62,32 @@ func TestWritePromptFile(t *testing.T) {
 				if !strings.Contains(output, "10 comments") {
 					t.Error("Output should contain comment count")
 				}
-				// Check that output directory is used in the review.json path
-				expectedPath := filepath.Join(outputDir, "review.json")
-				if !strings.Contains(output, expectedPath) {
-					t.Errorf("Output should contain dynamic output path: %s", expectedPath)
+				// Check that review output file path is in the prompt
+				if !strings.Contains(output, "review.json") {
+					t.Error("Output should contain review output file path")
 				}
 			},
 		},
 		{
 			name: "selective review types",
 			settings: Settings{
-				RepoName:          "test-repo",
-				SourceBranch:      "feature",
-				TargetBranch:      "main",
-				MergeBaseSha:      "abc123",
-				SourceSha:         "def456",
-				EnableBugs:        true,
+				RepoName:         "test-repo",
+				SourceBranch:     "feature",
+				TargetBranch:     "main",
+				MergeBaseSha:     "abc123",
+				SourceSha:        "def456",
+				EnableBugs:       true,
 				EnablePerformance: false,
 				EnableScalability: false,
-				EnableCodeSmell:   true,
-				CommentCount:      15,
-				OutputDir:         filepath.Join(os.TempDir(), "test-output-2"),
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  true,
+				CommentCount:     15,
+				OutputFile:       filepath.Join(os.TempDir(), "test-output-2", "task.txt"),
+				ReviewOutputFile: filepath.Join(os.TempDir(), "test-output-2", "review.json"),
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			wantError: false,
-			checkOutput: func(t *testing.T, outputDir string) {
-				content, err := os.ReadFile(filepath.Join(outputDir, "task.txt"))
+			checkOutput: func(t *testing.T, outputFile string) {
+				content, err := os.ReadFile(outputFile)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
@@ -117,22 +118,23 @@ func TestWritePromptFile(t *testing.T) {
 		{
 			name: "all review types disabled",
 			settings: Settings{
-				RepoName:          "test-repo",
-				SourceBranch:      "feature",
-				TargetBranch:      "main",
-				MergeBaseSha:      "abc123",
-				SourceSha:         "def456",
-				EnableBugs:        false,
+				RepoName:         "test-repo",
+				SourceBranch:     "feature",
+				TargetBranch:     "main",
+				MergeBaseSha:     "abc123",
+				SourceSha:        "def456",
+				EnableBugs:       false,
 				EnablePerformance: false,
 				EnableScalability: false,
-				EnableCodeSmell:   false,
-				CommentCount:      5,
-				OutputDir:         filepath.Join(os.TempDir(), "test-output-3"),
-				CustomRulesPath:   ".harness/rules/review.md",
+				EnableCodeSmell:  false,
+				CommentCount:     5,
+				OutputFile:       filepath.Join(os.TempDir(), "test-output-3", "task.txt"),
+				ReviewOutputFile: filepath.Join(os.TempDir(), "test-output-3", "review.json"),
+				CustomRulesPath:  ".harness/rules/review.md",
 			},
 			wantError: false,
-			checkOutput: func(t *testing.T, outputDir string) {
-				content, err := os.ReadFile(filepath.Join(outputDir, "task.txt"))
+			checkOutput: func(t *testing.T, outputFile string) {
+				content, err := os.ReadFile(outputFile)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
@@ -159,12 +161,43 @@ func TestWritePromptFile(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "custom review output file",
+			settings: Settings{
+				RepoName:         "test-repo",
+				MergeBaseSha:     "abc123",
+				SourceSha:        "def456",
+				EnableBugs:       true,
+				EnablePerformance: true,
+				EnableScalability: true,
+				EnableCodeSmell:  true,
+				CommentCount:     10,
+				OutputFile:       filepath.Join(os.TempDir(), "test-output-4", "task.txt"),
+				ReviewOutputFile: "/custom/path/ai-review.json",
+				CustomRulesPath:  ".harness/rules/review.md",
+			},
+			wantError: false,
+			checkOutput: func(t *testing.T, outputFile string) {
+				content, err := os.ReadFile(outputFile)
+				if err != nil {
+					t.Fatalf("Failed to read output file: %v", err)
+				}
+
+				output := string(content)
+
+				// Check that custom review output file path is in the prompt
+				if !strings.Contains(output, "/custom/path/ai-review.json") {
+					t.Error("Output should contain custom review output file path")
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean up before test
-			os.RemoveAll(tt.settings.OutputDir)
+			outputDir := filepath.Dir(tt.settings.OutputFile)
+			os.RemoveAll(outputDir)
 
 			// Run test
 			err := WritePromptFile(tt.settings)
@@ -177,30 +210,32 @@ func TestWritePromptFile(t *testing.T) {
 
 			// Run output checks
 			if !tt.wantError && tt.checkOutput != nil {
-				tt.checkOutput(t, tt.settings.OutputDir)
+				tt.checkOutput(t, tt.settings.OutputFile)
 			}
 
 			// Clean up after test
-			os.RemoveAll(tt.settings.OutputDir)
+			os.RemoveAll(outputDir)
 		})
 	}
 }
 
 func TestWritePromptFileCreatesDirectory(t *testing.T) {
 	tempDir := filepath.Join(os.TempDir(), "test-nested", "output", "dir")
+	outputFile := filepath.Join(tempDir, "task.txt")
 	defer os.RemoveAll(filepath.Join(os.TempDir(), "test-nested"))
 
 	settings := Settings{
-		RepoName:          "test-repo",
-		MergeBaseSha:      "abc123",
-		SourceSha:         "def456",
-		EnableBugs:        true,
+		RepoName:         "test-repo",
+		MergeBaseSha:     "abc123",
+		SourceSha:        "def456",
+		EnableBugs:       true,
 		EnablePerformance: true,
 		EnableScalability: true,
-		EnableCodeSmell:   true,
-		CommentCount:      10,
-		OutputDir:         tempDir,
-		CustomRulesPath:   ".harness/rules/review.md",
+		EnableCodeSmell:  true,
+		CommentCount:     10,
+		OutputFile:       outputFile,
+		ReviewOutputFile: filepath.Join(tempDir, "review.json"),
+		CustomRulesPath:  ".harness/rules/review.md",
 	}
 
 	err := WritePromptFile(settings)
@@ -214,7 +249,6 @@ func TestWritePromptFileCreatesDirectory(t *testing.T) {
 	}
 
 	// Verify file exists
-	outputFile := filepath.Join(tempDir, "task.txt")
 	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
 		t.Error("Output file was not created")
 	}

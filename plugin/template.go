@@ -63,5 +63,5 @@ JSON response format:
 ]
 {{"}}"}}
 
-Write the output to the file ` + "`{{.OutputDir}}/review.json`" + ` as well formated JSON. Create file if needed. File should be created even in case there are no comments.
+Write the output to the file ` + "`{{.ReviewOutputFile}}`" + ` as well formated JSON. Create file if needed. File should be created even in case there are no comments.
 `
