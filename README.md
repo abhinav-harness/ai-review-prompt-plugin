@@ -34,16 +34,15 @@ The plugin:
 
 ### Pre-built Images
 
-Multi-architecture Docker images are automatically built and published to GitHub Container Registry:
+Multi-architecture Docker images are available on Docker Hub:
 
 ```bash
-docker pull your-registry/drone-ai-review:latest
+docker pull abhinavharness/drone-ai-review:latest
 ```
 
 Supported architectures:
 - `linux/amd64` (x86_64)
 - `linux/arm64` (ARM 64-bit)
-- `linux/arm/v7` (ARM 32-bit)
 
 ### Building the Docker Image
 
@@ -53,36 +52,17 @@ docker build -t drone-ai-review:latest .
 
 ### Building Multi-Architecture Images
 
-The plugin supports multiple architectures: `linux/amd64`, `linux/arm64`, and `linux/arm/v7`.
-
-#### Using the build script (recommended):
-
-```bash
-# Build for all architectures (dry run)
-./build-multiarch.sh
-
-# Build and push to registry
-PUSH=true REGISTRY=your-registry IMAGE_NAME=drone-ai-review ./build-multiarch.sh
-
-# Build and load to local Docker (single arch only)
-LOAD=true ./build-multiarch.sh
-```
-
-#### Manual multi-arch build:
+The plugin supports multiple architectures: `linux/amd64` and `linux/arm64`.
 
 ```bash
 # Create a buildx builder
 docker buildx create --name multiarch-builder --use
 
 # Build for multiple architectures
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 \
-  -t your-registry/drone-ai-review:latest \
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t abhinavharness/drone-ai-review:latest \
   --push .
 ```
-
-### Publishing to Registry
-
-The multi-arch build script handles publishing automatically with `PUSH=true`.
 
 ## Usage
 
@@ -95,7 +75,7 @@ name: code-review
 
 steps:
   - name: generate-review-prompt
-    image: your-registry/drone-ai-review:latest
+    image: abhinavharness/drone-ai-review:latest
     settings:
       enable_bugs: true
       enable_performance: true
@@ -113,7 +93,7 @@ name: code-review-advanced
 
 steps:
   - name: generate-review-prompt
-    image: your-registry/drone-ai-review:latest
+    image: abhinavharness/drone-ai-review:latest
     settings:
       # Enable/disable specific review types
       enable_bugs: true
@@ -124,8 +104,9 @@ steps:
       # Limit number of comments
       comment_count: 20
       
-      # Custom output directory
-      output_dir: /drone/src/review-output
+      # Custom output file paths
+      output_file: /drone/src/prompts/task.txt
+      review_output_file: /drone/src/reviews/review.json
       
       # Custom rules file path
       custom_rules_path: .harness/rules/review.md
@@ -151,7 +132,8 @@ All parameters can be configured through the `settings` block in your `.drone.ym
 | `enable_scalability` | `PLUGIN_ENABLE_SCALABILITY` | boolean | `true` | Enable scalability reviews |
 | `enable_code_smell` | `PLUGIN_ENABLE_CODE_SMELL` | boolean | `true` | Enable code smell detection |
 | `comment_count` | `PLUGIN_COMMENT_COUNT` | integer | `10` | Maximum comments per PR |
-| `output_dir` | `PLUGIN_OUTPUT_DIR` | string | `../output` | Output directory path |
+| `output_file` | `PLUGIN_OUTPUT_FILE` | string | `../output/task.txt` | Path where prompt file is written |
+| `review_output_file` | `PLUGIN_REVIEW_OUTPUT_FILE` | string | `../output/review.json` | Path where AI should write review output |
 | `custom_rules_path` | `PLUGIN_CUSTOM_RULES_PATH` | string | `.harness/rules/review.md` | Custom rules file path |
 
 ## Review Types
@@ -204,11 +186,13 @@ Example `.harness/rules/review.md`:
 - Use constant-time comparison for secrets
 ```
 
-## Output Format
+## Output Files
 
-The plugin generates two files:
+The plugin works with two files:
 
-### 1. `task.txt`
+### 1. Prompt File (`output_file`)
+Default: `../output/task.txt`
+
 A comprehensive prompt file containing:
 - Repository and PR information
 - Git diff command with line number parsing
@@ -216,8 +200,10 @@ A comprehensive prompt file containing:
 - JSON output format specification
 - Instructions for AI model
 
-### 2. `review.json` (created by AI)
-The AI model should create this file with the following structure:
+### 2. Review Output File (`review_output_file`)
+Default: `../output/review.json`
+
+The path where the AI model should write the review output. The generated prompt instructs the AI to create this file with the following structure:
 
 ```json
 {
@@ -255,11 +241,15 @@ go mod download
 
 3. Build the plugin:
 ```bash
+make build
+# or
 go build -o drone-ai-review .
 ```
 
 4. Run tests:
 ```bash
+make test
+# or
 go test -v ./plugin/
 ```
 
@@ -270,52 +260,47 @@ export PLUGIN_SOURCE_BRANCH="feature-branch"
 export PLUGIN_TARGET_BRANCH="main"
 export PLUGIN_MERGE_BASE_SHA="abc123"
 export PLUGIN_SOURCE_SHA="def456"
-export PLUGIN_COMMENT_COUNT=15
+export PLUGIN_OUTPUT_FILE="./output/task.txt"
+export PLUGIN_REVIEW_OUTPUT_FILE="./output/review.json"
 ./drone-ai-review
 ```
 
-### Building Docker Image
+### Using Make
 
 ```bash
-docker build -t drone-ai-review:dev .
-```
+# Build the binary
+make build
 
-### Running Tests
-
-```bash
-# Using make (recommended)
+# Run tests
 make test
 
-# Run tests with coverage report
+# Run tests with coverage
 make test-coverage
 
-# Or using go directly
-go test ./...
+# Build Docker image
+make docker-build
 
-# Run tests with verbose output
-go test -v ./plugin/
-
-# Run tests with coverage
-go test -cover ./plugin/
+# Build and push multi-arch image
+make docker-multiarch
 ```
 
 ## Integration with AI Models
 
-The generated `task.txt` can be used with various AI models:
+The generated prompt file can be used with various AI models:
 
 ### OpenAI GPT-4
 ```bash
-cat output/task.txt | openai-cli --model gpt-4 > output/review.json
+cat output/task.txt | openai-cli --model gpt-4
 ```
 
 ### Anthropic Claude
 ```bash
-cat output/task.txt | claude-cli > output/review.json
+cat output/task.txt | claude-cli
 ```
 
 ### Local Models (Ollama, etc.)
 ```bash
-cat output/task.txt | ollama run codellama > output/review.json
+cat output/task.txt | ollama run codellama
 ```
 
 ## Troubleshooting
@@ -351,7 +336,7 @@ MIT License - see LICENSE file for details
 - **[README.md](README.md)** - This file, main documentation
 - **[USAGE.md](USAGE.md)** - Detailed usage examples and integration guides
 - **[SETUP.md](SETUP.md)** - Setup and deployment guide
-- **[TESTING.md](TESTING.md)** - Testing guide with 87.9% coverage
+- **[TESTING.md](TESTING.md)** - Testing guide
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history
 
@@ -359,11 +344,10 @@ MIT License - see LICENSE file for details
 
 For issues, questions, or contributions, please visit:
 - GitHub Issues: https://github.com/abhinav-harness/ai-review-prompt-plugin/issues
-- Documentation: https://github.com/abhinav-harness/ai-review-prompt-plugin
+- Docker Hub: https://hub.docker.com/r/abhinavharness/drone-ai-review
 
 ## Acknowledgments
 
 - Built for Drone CI
 - Inspired by automated code review tools
 - Powered by AI/ML models
-
